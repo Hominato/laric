@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track a Package</title>
+    <style>
+        :root {
+            --fedex-purple: #4d148c;
+            --fedex-purple-dark: #35105f;
+            --fedex-orange: #ff6600;
+            --ink: #1a1a1a;
+            --gray-900: #26262a;
+            --gray-600: #5c5c66;
+            --gray-300: #d9d9df;
+            --gray-100: #f2f2f5;
+            --white: #ffffff;
+            --success: #0a8a3e;
+            --line: #e2e2e8;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--gray-100);
+            color: var(--ink);
+        }
+
+        /* Header */
+        header {
+            background: var(--fedex-purple);
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: var(--white);
+            display: flex;
+            align-items: baseline;
+            gap: 2px;
+        }
+
+        .logo span {
+            color: var(--fedex-orange);
+        }
+
+        header nav {
+            display: flex;
+            gap: 22px;
+            font-size: 13px;
+            color: #e6dcf5;
+        }
+
+        header nav a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        header nav a:hover {
+            color: var(--white);
+        }
+
+        /* Hero / search band */
+        .search-band {
+            background: linear-gradient(180deg, var(--fedex-purple) 0%, var(--fedex-purple-dark) 100%);
+            padding: 40px 24px 70px;
+            text-align: center;
+        }
+
+        .search-band h1 {
+            color: var(--white);
+            font-size: 28px;
+            margin: 0 0 22px;
+            font-weight: 700;
+        }
+
+        .search-box {
+            max-width: 680px;
+            margin: 0 auto;
+            background: var(--white);
+            border-radius: 6px;
+            padding: 6px;
+            display: flex;
+            gap: 6px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 14px 16px;
+            font-size: 15px;
+            border-radius: 4px;
+            color: var(--ink);
+        }
+
+        .search-box button {
+            background: var(--fedex-orange);
+            color: var(--white);
+            border: none;
+            font-weight: 700;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+            padding: 0 26px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .search-box button:hover {
+            background: #e65c00;
+        }
+
+        .hint {
+            color: #d8c9ef;
+            font-size: 12.5px;
+            margin-top: 10px;
+        }
+
+        .hint code {
+            background: rgba(255, 255, 255, 0.12);
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        /* Content container */
+        main {
+            max-width: 900px;
+            margin: -40px auto 60px;
+            padding: 0 24px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+            padding: 26px 28px;
+            margin-bottom: 20px;
+        }
+
+        /* Status summary */
+        .status-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 16px;
+            border-bottom: 1px solid var(--line);
+            padding-bottom: 20px;
+            margin-bottom: 24px;
+        }
+
+        .status-left .tn-label {
+            font-size: 12px;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 4px;
+        }
+
+        .status-left .tn-value {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--ink);
+            font-family: 'Courier New', monospace;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .badge-delivered {
+            background: #e5f6ec;
+            color: var(--success);
+        }
+
+        .badge-transit {
+            background: #fff1e2;
+            color: #c25a00;
+        }
+
+        .badge-exception {
+            background: #fff3ed;
+            color: #c25a00;
+            border: 1px solid #f97316;
+        }
+
+        .badge-info {
+            background: #eee7f8;
+            color: var(--fedex-purple);
+        }
+
+        .eta-block {
+            text-align: right;
+        }
+
+        .eta-label {
+            font-size: 12px;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .eta-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--fedex-purple);
+        }
+
+        /* Progress bar */
+        .progress-wrap {
+            margin-bottom: 30px;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .progress-track {
+            position: absolute;
+            top: 11px;
+            left: 5%;
+            right: 5%;
+            height: 3px;
+            background: var(--gray-300);
+            z-index: 0;
+        }
+
+        .progress-fill {
+            position: absolute;
+            top: 11px;
+            left: 5%;
+            height: 3px;
+            background: var(--fedex-orange);
+            z-index: 1;
+            transition: width 0.6s ease;
+        }
+
+        .step {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 70px;
+        }
+
+        .step-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--white);
+            border: 3px solid var(--gray-300);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .step.done .step-dot {
+            border-color: var(--fedex-orange);
+            background: var(--fedex-orange);
+        }
+
+        .step.current .step-dot {
+            border-color: var(--fedex-purple);
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(77, 20, 140, 0.15);
+        }
+
+        .step.current.hold .step-dot {
+            border-color: #d97706;
+            background: var(--white);
+            box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.25);
+        }
+
+        .step-label {
+            font-size: 10.5px;
+            color: var(--gray-600);
+            margin-top: 8px;
+            text-align: center;
+            line-height: 1.3;
+        }
+
+        .step.done .step-label,
+        .step.current .step-label {
+            color: var(--ink);
+            font-weight: 600;
+        }
+
+        /* Details grid */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-bottom: 4px;
+        }
+
+        .detail-item .d-label {
+            font-size: 11.5px;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .detail-item .d-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--ink);
+        }
+
+        /* Timeline */
+        .card h2 {
+            font-size: 16px;
+            margin: 0 0 18px;
+            color: var(--ink);
+            font-weight: 700;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 28px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 6px;
+            bottom: 6px;
+            width: 2px;
+            background: var(--line);
+        }
+
+        .t-item {
+            position: relative;
+            padding-bottom: 22px;
+        }
+
+        .t-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .t-dot {
+            position: absolute;
+            left: -28px;
+            top: 2px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--gray-300);
+            border: 3px solid var(--white);
+            box-shadow: 0 0 0 2px var(--gray-300);
+        }
+
+        .t-item.latest .t-dot {
+            background: var(--fedex-orange);
+            box-shadow: 0 0 0 2px var(--fedex-orange);
+        }
+
+        .t-time {
+            font-size: 12px;
+            color: var(--gray-600);
+            margin-bottom: 2px;
+        }
+
+        .t-status {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 2px;
+        }
+
+        .t-item.latest .t-status {
+            color: var(--fedex-purple);
+        }
+
+        .t-location {
+            font-size: 13px;
+            color: var(--gray-600);
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--gray-600);
+        }
+
+        .empty-state .box-icon {
+            font-size: 46px;
+            margin-bottom: 14px;
+        }
+
+        .empty-state h3 {
+            color: var(--ink);
+            margin: 0 0 8px;
+            font-size: 17px;
+        }
+
+        .empty-state p {
+            margin: 0;
+            font-size: 13.5px;
+        }
+
+        /* Loading state */
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .fedex-spinner {
+            display: inline-block;
+            width: 52px;
+            height: 52px;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .fedex-spinner::before,
+        .fedex-spinner::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 4px solid transparent;
+        }
+
+        .fedex-spinner::before {
+            border-top-color: var(--fedex-purple);
+            animation: spin 0.9s linear infinite;
+        }
+
+        .fedex-spinner::after {
+            border-bottom-color: var(--fedex-orange);
+            animation: spin 0.9s linear infinite reverse;
+            inset: 8px;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .loading-label {
+            font-size: 14px;
+            color: var(--gray-600);
+            font-weight: 600;
+        }
+
+        .loading-dots::after {
+            content: '';
+            animation: dots 1.4s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0% {
+                content: '';
+            }
+
+            25% {
+                content: '.';
+            }
+
+            50% {
+                content: '..';
+            }
+
+            75% {
+                content: '...';
+            }
+
+            100% {
+                content: '';
+            }
+        }
+
+        .loading-progress {
+            width: 200px;
+            height: 3px;
+            background: var(--gray-300);
+            border-radius: 2px;
+            margin: 14px auto 0;
+            overflow: hidden;
+        }
+
+        .loading-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--fedex-purple), var(--fedex-orange));
+            border-radius: 2px;
+            animation: loading-bar 4.5s ease-in-out forwards;
+        }
+
+        @keyframes loading-bar {
+            0% {
+                width: 0%;
+            }
+
+            60% {
+                width: 75%;
+            }
+
+            90% {
+                width: 92%;
+            }
+
+            100% {
+                width: 98%;
+            }
+        }
+
+        #track-btn.loading {
+            opacity: 0.65;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .error-note {
+            background: #fdeaea;
+            color: #b3261e;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 13.5px;
+            font-weight: 600;
+            margin-bottom: 18px;
+            display: none;
+        }
+
+        footer {
+            text-align: center;
+            color: var(--gray-600);
+            font-size: 12px;
+            padding: 20px 24px 40px;
+        }
+
+        @media (max-width: 620px) {
+            header {
+                flex-direction: column;
+                gap: 14px;
+                padding: 16px;
+            }
+
+            header nav {
+                width: 100%;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+
+            .search-band {
+                padding: 30px 16px 50px;
+            }
+
+            .search-band h1 {
+                font-size: 24px;
+            }
+
+            main {
+                padding: 0 14px;
+                margin-top: -30px;
+            }
+
+            .card {
+                padding: 20px 18px;
+            }
+
+            .details-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 14px;
+            }
+
+            .step-label {
+                display: none;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .search-box button {
+                padding: 14px;
+            }
+
+            .eta-block {
+                text-align: left;
+                margin-top: 8px;
+            }
+
+            .status-top {
+                flex-direction: column;
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* SVG Map styling */
+        .map-card {
+            background: #1e1e24;
+            color: #ffffff;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .map-card h2 {
+            margin: 0 0 16px;
+            font-size: 16px;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .map-svg-container {
+            position: relative;
+            width: 100%;
+            height: 240px;
+            background: radial-gradient(circle at center, #2c2c35 0%, #17171c 100%);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+        }
+
+        .map-svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-grid-line {
+            stroke: rgba(255, 255, 255, 0.03);
+            stroke-width: 1;
+        }
+
+        .route-path-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.12);
+            stroke-width: 3;
+            stroke-linecap: round;
+        }
+
+        .route-path-active {
+            fill: none;
+            stroke: var(--fedex-orange);
+            stroke-width: 3.5;
+            stroke-linecap: round;
+            filter: drop-shadow(0 0 4px var(--fedex-orange));
+        }
+
+        .map-node {
+            fill: #2c2c35;
+            stroke: rgba(255, 255, 255, 0.3);
+            stroke-width: 2.5;
+            transition: all 0.3s ease;
+        }
+
+        .map-node.active {
+            fill: var(--fedex-orange);
+            stroke: #ffffff;
+            filter: drop-shadow(0 0 6px var(--fedex-orange));
+        }
+
+        .map-node.passed {
+            fill: var(--fedex-purple);
+            stroke: #ffffff;
+        }
+
+        .map-label {
+            font-size: 10.5px;
+            font-weight: 700;
+            fill: #a0a0b0;
+            font-family: inherit;
+        }
+
+        .map-label.active {
+            fill: #ffffff;
+        }
+
+        .package-pointer {
+            fill: var(--fedex-orange);
+            stroke: #ffffff;
+            stroke-width: 2;
+            filter: drop-shadow(0 0 8px var(--fedex-orange));
+        }
+
+        .pulse-ring {
+            animation: pulse-ring-anim 1.8s cubic-bezier(0.215, 0.610, 0.355, 1) infinite;
+            transform-origin: center;
+        }
+
+        @keyframes pulse-ring-anim {
+            0% {
+                transform: scale(0.6);
+                opacity: 0.9;
+            }
+
+            100% {
+                transform: scale(2.4);
+                opacity: 0;
+            }
+        }
+
+        .map-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .route-meta-badge {
+            background: rgba(255, 255, 255, 0.12);
+            color: #d8c9ef;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <div class="logo">Fed<span>Ex</span></div>
+        <nav>
+            <a href="#">Ship</a>
+            <a href="#">Track</a>
+            <a href="#">Locations</a>
+            <a href="#">Support</a>
+        </nav>
+    </header>
+
+    <div class="search-band">
+        <h1>Track your package</h1>
+        <div class="search-box">
+            <input id="tn-input" type="text" placeholder="Enter tracking number " autocomplete="off" />
+            <button id="track-btn">TRACK</button>
+        </div>
+
+    </div>
+
+    <main>
+        <div id="error-note" class="error-note">That tracking number doesn't match a known format. Enter a 10 to 15
+            digit number.</div>
+
+        <div id="result-area"></div>
+    </main>
+
+    <footer>
+    </footer>
+
+    <script>
+        const resultArea = document.getElementById('result-area');
+        const errorNote = document.getElementById('error-note');
+        const input = document.getElementById('tn-input');
+        const btn = document.getElementById('track-btn');
+
+        // Route schedule anchored to US Central Daylight Time (CDT = UTC-5).
+        // Aug 29, 2026 00:00 CDT = Aug 29, 2026 05:00 UTC
+        // Sep 6, 2026 12:00 CDT = Sep 6, 2026 17:00 UTC
+        const SCHEDULE = {
+            startDate: new Date(Date.UTC(2026, 7, 29, 5, 0, 0)),
+            endDate: new Date(Date.UTC(2026, 8, 6, 17, 0, 0))
+        };
+
+        const TOTAL_SCHEDULE_MINUTES = (SCHEDULE.endDate.getTime() - SCHEDULE.startDate.getTime()) / (60 * 1000); // 11520 mins (8 days)
+
+        const STAGES = ['Info Received', 'Picked Up', 'In Transit', 'Out for Delivery', 'Delivered'];
+
+        // Geocoding Database for FedEx Sorting Hubs and Major US Cities
+        const KNOWN_HUBS = [
+            { city: 'Washington', state: 'DC', name: 'Washington, DC', lat: 38.9072, lng: -77.0369, mapX: 330, mapY: 90, hub: 'Washington DC Freight Terminal' },
+            { city: 'Schertz', state: 'TX', name: 'Schertz, TX', lat: 29.5522, lng: -98.2697, mapX: 145, mapY: 200, hub: 'Schertz Delivery Station' },
+            { city: 'San Antonio', state: 'TX', name: 'San Antonio, TX', lat: 29.4241, lng: -98.4936, mapX: 142, mapY: 202, hub: 'San Antonio Regional Hub' },
+            { city: 'St. Paul', state: 'MN', name: 'St. Paul, MN', lat: 44.9537, lng: -93.0900, mapX: 135, mapY: 42, hub: 'Minneapolis/St. Paul Sort Facility' },
+            { city: 'North St. Paul', state: 'MN', name: 'North St. Paul, MN', lat: 45.0147, lng: -93.0097, mapX: 138, mapY: 41, hub: 'North St. Paul Delivery Station' },
+            { city: 'Minneapolis', state: 'MN', name: 'Minneapolis, MN', lat: 44.9778, lng: -93.2650, mapX: 130, mapY: 40, hub: 'Minneapolis Regional Hub' },
+            { city: 'Chicago', state: 'IL', name: 'Chicago, IL', lat: 41.8781, lng: -87.6298, mapX: 250, mapY: 85, hub: 'Chicago Sorting Facility' },
+            { city: 'Memphis', state: 'TN', name: 'Memphis, TN', lat: 35.1495, lng: -90.0490, mapX: 230, mapY: 130, hub: 'Memphis World Superhub' },
+            { city: 'Dallas', state: 'TX', name: 'Dallas, TX', lat: 32.7767, lng: -96.7970, mapX: 160, mapY: 180, hub: 'Dallas Sort Center' },
+            { city: 'Crandall', state: 'TX', name: 'Crandall, TX', lat: 32.6282, lng: -96.4542, mapX: 172, mapY: 185, hub: 'Crandall Delivery Station' },
+            { city: 'Atlanta', state: 'GA', name: 'Atlanta, GA', lat: 33.7490, lng: -84.3880, mapX: 290, mapY: 145, hub: 'Atlanta Regional Distribution Hub' },
+            { city: 'New York', state: 'NY', name: 'New York, NY', lat: 40.7128, lng: -74.0060, mapX: 350, mapY: 65, hub: 'Newark/NYC Gateway Facility' },
+            { city: 'Los Angeles', state: 'CA', name: 'Los Angeles, CA', lat: 34.0522, lng: -118.2437, mapX: 45, mapY: 135, hub: 'Los Angeles Metro Sort Hub' },
+            { city: 'Denver', state: 'CO', name: 'Denver, CO', lat: 39.7392, lng: -104.9903, mapX: 105, mapY: 100, hub: 'Denver Mountain Sorting Center' },
+            { city: 'Seattle', state: 'WA', name: 'Seattle, WA', lat: 47.6062, lng: -122.3321, mapX: 35, mapY: 25, hub: 'Seattle Pacific NW Hub' },
+            { city: 'Miami', state: 'FL', name: 'Miami, FL', lat: 25.7617, lng: -80.1918, mapX: 335, mapY: 215, hub: 'Miami Gateway Station' }
+        ];
+
+        // Active Sender & Receiver State
+        let currentSenderName = "IRS Community Grant";
+        let currentSenderPhone = "(202) 555-0148";
+        let currentSenderAddress = "Midtown Center, 1100 15th St NW, Washington, DC 20005, United States";
+
+        let currentReceiverName = "Mrs Fe Abel Moreo";
+        let currentReceiverAddress = "2529 War Admiral, Schertz, Texas 78108";
+        let currentContents = "Insurance paperwork";
+
+
+
+        function geocodeAddress(addressStr) {
+            if (!addressStr) return KNOWN_HUBS[0];
+            const str = addressStr.toLowerCase();
+
+            for (const hub of KNOWN_HUBS) {
+                if (str.includes(hub.city.toLowerCase())) {
+                    return hub;
+                }
+            }
+
+            const stateMatch = addressStr.match(/\b([A-Z]{2})\b/i);
+            if (stateMatch) {
+                const state = stateMatch[1].toUpperCase();
+                const stateHub = KNOWN_HUBS.find(h => h.state === state);
+                if (stateHub) return stateHub;
+            }
+
+            return KNOWN_HUBS[0];
+        }
+
+        function calcHaversineMiles(lat1, lon1, lat2, lon2) {
+            const R = 3958.8; // Radius of Earth in miles
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            return Math.round(R * c * 10) / 10;
+        }
+
+        // Route Estimation Engine between Sender & Receiver Addresses
+        function estimateShippingRoute(senderAddressStr, receiverAddressStr) {
+            const originGeo = geocodeAddress(senderAddressStr);
+            const destGeo = geocodeAddress(receiverAddressStr);
+
+            const distanceMiles = calcHaversineMiles(originGeo.lat, originGeo.lng, destGeo.lat, destGeo.lng);
+
+            let routeNodes = [];
+
+            if (distanceMiles < 50) {
+                // Short / Local route within same metro area
+                const metroHub = KNOWN_HUBS.find(h => h.city === 'Minneapolis') || originGeo;
+                if (originGeo.name === destGeo.name) {
+                    routeNodes = [originGeo];
+                } else if (originGeo.name === metroHub.name || destGeo.name === metroHub.name) {
+                    routeNodes = [originGeo, destGeo];
+                } else {
+                    routeNodes = [originGeo, metroHub, destGeo];
+                }
+            } else if (distanceMiles < 500) {
+                // Regional Route (50-500 miles)
+                const originHub = KNOWN_HUBS.find(h => h.state === originGeo.state) || originGeo;
+                const destHub = KNOWN_HUBS.find(h => h.state === destGeo.state) || destGeo;
+
+                routeNodes = [originGeo];
+                if (originHub.name !== originGeo.name) routeNodes.push(originHub);
+                if (destHub.name !== destGeo.name && destHub.name !== originHub.name) routeNodes.push(destHub);
+                if (destGeo.name !== routeNodes[routeNodes.length - 1].name) routeNodes.push(destGeo);
+            } else {
+                // Long-distance / Cross-Country (> 500 miles)
+                const superhub = KNOWN_HUBS.find(h => h.city === 'Memphis') || KNOWN_HUBS[4];
+                const originHub = KNOWN_HUBS.find(h => h.state === originGeo.state) || originGeo;
+                const destHub = KNOWN_HUBS.find(h => h.state === destGeo.state) || destGeo;
+
+                routeNodes = [originGeo];
+                if (originHub.name !== originGeo.name && originHub.name !== superhub.name) routeNodes.push(originHub);
+                if (superhub.name !== routeNodes[routeNodes.length - 1].name && superhub.name !== destGeo.name) routeNodes.push(superhub);
+                if (destHub.name !== superhub.name && destHub.name !== destGeo.name && destHub.name !== routeNodes[routeNodes.length - 1].name) routeNodes.push(destHub);
+                if (destGeo.name !== routeNodes[routeNodes.length - 1].name) routeNodes.push(destGeo);
+            }
+
+            // Deduplicate consecutive nodes
+            const finalNodes = [];
+            routeNodes.forEach(node => {
+                if (finalNodes.length === 0 || finalNodes[finalNodes.length - 1].name !== node.name) {
+                    finalNodes.push(node);
+                }
+            });
+
+            // Generate timeline events matching the estimated stops
+            const totalScheduleMinutes = TOTAL_SCHEDULE_MINUTES;
+            const events = [];
+
+            events.push({
+                offsetMinutes: 0,
+                status: 'Shipment information sent to FedEx',
+                detail: 'Label created, package awaiting pickup',
+                loc: finalNodes[0].name,
+                nodeIndex: 0
+            });
+
+            events.push({
+                offsetMinutes: 510,
+                status: 'Picked up',
+                detail: 'Package tendered to FedEx',
+                loc: finalNodes[0].name,
+                nodeIndex: 0
+            });
+
+            if (finalNodes.length === 1) {
+                events.push({ offsetMinutes: 1000, status: 'Arrived at FedEx location', detail: 'Package arrived at local facility', loc: finalNodes[0].name, nodeIndex: 0 });
+                events.push({ offsetMinutes: totalScheduleMinutes - 240, status: 'Out for delivery', detail: 'On FedEx vehicle for delivery', loc: finalNodes[0].name, nodeIndex: 0 });
+                events.push({ offsetMinutes: totalScheduleMinutes, status: 'Delivered', detail: 'Delivered, Front Door. Direct Signature Obtained', loc: finalNodes[0].name, nodeIndex: 0 });
+            } else {
+                const numLegs = finalNodes.length - 1;
+                const availableTransitMinutes = totalScheduleMinutes - 1500;
+                const legDuration = availableTransitMinutes / numLegs;
+
+                let currentMinutes = 1035;
+
+                for (let i = 0; i < finalNodes.length; i++) {
+                    const node = finalNodes[i];
+                    if (i === 0) {
+                        events.push({
+                            offsetMinutes: currentMinutes,
+                            status: 'Arrived at FedEx location',
+                            detail: `Package arrived at ${node.hub || node.name + ' sort facility'}`,
+                            loc: node.name,
+                            nodeIndex: i
+                        });
+                        currentMinutes += 400;
+                        events.push({
+                            offsetMinutes: currentMinutes,
+                            status: 'Departed FedEx location',
+                            detail: `Package left facility in ${node.name}`,
+                            loc: node.name,
+                            nodeIndex: i
+                        });
+                    } else if (i < finalNodes.length - 1) {
+                        currentMinutes += Math.round(legDuration * 0.7);
+                        events.push({
+                            offsetMinutes: currentMinutes,
+                            status: 'Arrived at FedEx location',
+                            detail: `Package arrived at sort facility in ${node.name}`,
+                            loc: node.name,
+                            nodeIndex: i
+                        });
+                        currentMinutes += Math.round(legDuration * 0.3);
+                        events.push({
+                            offsetMinutes: currentMinutes,
+                            status: 'Departed FedEx location',
+                            detail: `Package departed ${node.name} hub`,
+                            loc: node.name,
+                            nodeIndex: i
+                        });
+                    } else {
+                        currentMinutes = Math.min(currentMinutes + Math.round(legDuration * 0.6), totalScheduleMinutes - 480);
+                        events.push({
+                            offsetMinutes: currentMinutes,
+                            status: 'Arrived at destination facility',
+                            detail: `Package arrived at local delivery carrier in ${node.name}`,
+                            loc: node.name,
+                            nodeIndex: i
+                        });
+                    }
+                }
+
+                events.push({
+                    offsetMinutes: totalScheduleMinutes - 240,
+                    status: 'Out for delivery',
+                    detail: 'On FedEx vehicle for delivery',
+                    loc: finalNodes[finalNodes.length - 1].name,
+                    nodeIndex: finalNodes.length - 1
+                });
+                events.push({
+                    offsetMinutes: totalScheduleMinutes,
+                    status: 'Delivered',
+                    detail: 'Delivered, Front Door. Direct Signature Obtained',
+                    loc: finalNodes[finalNodes.length - 1].name,
+                    nodeIndex: finalNodes.length - 1
+                });
+            }
+
+            return {
+                nodes: finalNodes,
+                rawEvents: events,
+                distanceMiles: distanceMiles,
+                originName: finalNodes[0].name,
+                destName: finalNodes[finalNodes.length - 1].name
+            };
+        }
+
+        function getActiveTime() {
+            return new Date();
+        }
+
+        function getDynamicPackagePosition(offset, nodes, events) {
+            if (!nodes || nodes.length === 0) return { x: 200, y: 120 };
+            if (nodes.length === 1 || offset <= 0) return { x: nodes[0].mapX, y: nodes[0].mapY };
+            if (offset >= TOTAL_SCHEDULE_MINUTES) return { x: nodes[nodes.length - 1].mapX, y: nodes[nodes.length - 1].mapY };
+
+            for (let i = 0; i < nodes.length - 1; i++) {
+                const depEvent = events.find(e => e.nodeIndex === i && e.status.includes('Departed')) || events[0];
+                const arrEvent = events.find(e => e.nodeIndex === i + 1 && e.status.includes('Arrived')) || events[events.length - 1];
+
+                const depTime = depEvent.offsetMinutes;
+                const arrTime = arrEvent.offsetMinutes;
+
+                if (offset >= depTime && offset <= arrTime) {
+                    const ratio = (offset - depTime) / (arrTime - depTime || 1);
+                    const clampedRatio = Math.max(0, Math.min(1, ratio));
+                    return {
+                        x: nodes[i].mapX + clampedRatio * (nodes[i + 1].mapX - nodes[i].mapX),
+                        y: nodes[i].mapY + clampedRatio * (nodes[i + 1].mapY - nodes[i].mapY)
+                    };
+                }
+            }
+
+            for (let i = events.length - 1; i >= 0; i--) {
+                if (offset >= events[i].offsetMinutes) {
+                    const idx = Math.min(events[i].nodeIndex, nodes.length - 1);
+                    return { x: nodes[idx].mapX, y: nodes[idx].mapY };
+                }
+            }
+
+            return { x: nodes[0].mapX, y: nodes[0].mapY };
+        }
+
+        function getDynamicActivePath(pos, offset, nodes, events) {
+            if (!nodes || nodes.length < 2) return '';
+            let path = `M ${nodes[0].mapX} ${nodes[0].mapY}`;
+
+            for (let i = 0; i < nodes.length - 1; i++) {
+                const arrEvent = events.find(e => e.nodeIndex === i + 1 && e.status.includes('Arrived'));
+                const arrTime = arrEvent ? arrEvent.offsetMinutes : TOTAL_SCHEDULE_MINUTES;
+
+                if (offset >= arrTime) {
+                    path += ` L ${nodes[i + 1].mapX} ${nodes[i + 1].mapY}`;
+                } else {
+                    const depEvent = events.find(e => e.nodeIndex === i && e.status.includes('Departed'));
+                    const depTime = depEvent ? depEvent.offsetMinutes : 0;
+                    if (offset >= depTime) {
+                        path += ` L ${pos.x} ${pos.y}`;
+                    }
+                    break;
+                }
+            }
+            return path;
+        }
+
+        function getFullRoutePath(nodes) {
+            if (!nodes || nodes.length === 0) return '';
+            return nodes.map((n, i) => `${i === 0 ? 'M' : 'L'} ${n.mapX} ${n.mapY}`).join(' ');
+        }
+
+        const CDT = { timeZone: 'America/Chicago' };
+
+        function fmtTime(d) {
+            return d.toLocaleString('en-US', {
+                ...CDT,
+                month: 'short', day: 'numeric',
+                hour: 'numeric', minute: '2-digit', hour12: true
+            });
+        }
+
+        function getStageIndex(status) {
+            if (status === 'Delivered') return 4;
+            if (status === 'Out for delivery') return 3;
+            if (status.includes('Arrived') || status.includes('Departed')) return 2;
+            if (status === 'Picked up') return 1;
+            return 0;
+        }
+
+        function buildTrackingData(tn) {
+            const activeTime = getActiveTime();
+
+            // Offset in minutes from start date
+            const offset = (activeTime.getTime() - SCHEDULE.startDate.getTime()) / (60 * 1000);
+
+            // Estimate route dynamically based on sender and receiver address
+            const route = estimateShippingRoute(currentSenderAddress, currentReceiverAddress);
+
+            // Filter events that have occurred up to activeTime
+            const happenedEvents = route.rawEvents.filter(e => {
+                const eventDate = new Date(SCHEDULE.startDate.getTime() + e.offsetMinutes * 60 * 1000);
+                return eventDate <= activeTime;
+            });
+
+            const events = happenedEvents.map(e => ({
+                status: e.status,
+                detail: e.detail,
+                loc: e.loc,
+                t: new Date(SCHEDULE.startDate.getTime() + e.offsetMinutes * 60 * 1000)
+            })).reverse();
+
+            if (events.length === 0) {
+                events.push({
+                    status: route.rawEvents[0].status,
+                    detail: route.rawEvents[0].detail,
+                    loc: route.rawEvents[0].loc,
+                    t: SCHEDULE.startDate
+                });
+            }
+
+            const latestStatus = events[0].status;
+            const isHold = latestStatus.toLowerCase().includes('hold') || latestStatus.toLowerCase().includes('exception') || !!events[0].isOnHold;
+            const currentStage = getStageIndex(latestStatus);
+
+            const origin = [route.originName, 'US'];
+            const dest = [route.destName, 'US'];
+            const etaDate = SCHEDULE.endDate;
+
+            let h = 2166136261;
+            for (let i = 0; i < tn.length; i++) {
+                h ^= tn.charCodeAt(i);
+                h = Math.imul(h, 16777619);
+            }
+            const seed = h >>> 0;
+            const randVal = ((seed ^ seed >>> 14) >>> 0) / 4294967296;
+
+            const weight = (1.5 + randVal * 2.0).toFixed(1);
+            const pieces = 1;
+            const service = route.distanceMiles < 100 ? 'FedEx Ground / Local' : 'FedEx Express Saver';
+            const contents = currentContents || 'Insurance paperwork';
+
+            const sender = `${currentSenderName}<br><span style="font-weight: 400; color: var(--gray-600); font-size: 13px; line-height: 1.4; display: inline-block; margin-top: 2px;">${currentSenderAddress}</span>`;
+            const receiver = `${currentReceiverName}<br><span style="font-weight: 400; color: var(--gray-600); font-size: 13px; line-height: 1.4; display: inline-block; margin-top: 2px;">${currentReceiverAddress}</span>`;
+
+            return {
+                tn, origin, dest, events, etaDate, finalStageIdx: currentStage, exception: isHold,
+                weight, pieces, service, sender, receiver, contents, offset, route
+            };
+        }
+
+        function stageStatusBadge(finalStageIdx, exception, latestStatus) {
+            if (exception || (latestStatus && (latestStatus.toLowerCase().includes('hold') || latestStatus.toLowerCase().includes('exception')))) {
+                return { cls: 'badge-exception', label: 'On Hold' };
+            }
+            if (finalStageIdx === 4) return { cls: 'badge-delivered', label: 'Delivered' };
+            if (finalStageIdx === 3) return { cls: 'badge-transit', label: 'Out for Delivery' };
+            return { cls: 'badge-transit', label: 'In Transit' };
+        }
+
+        function renderMapSvg(data) {
+            const offset = data.offset;
+            const route = data.route;
+            const nodes = route.nodes;
+            const rawEvents = route.rawEvents;
+
+            const pos = getDynamicPackagePosition(offset, nodes, rawEvents);
+            const activePath = getDynamicActivePath(pos, offset, nodes, rawEvents);
+            const fullBgPath = getFullRoutePath(nodes);
+
+            const latestEvent = data.events && data.events.length > 0 ? data.events[0] : null;
+            const isHold = data.exception || (latestEvent && (latestEvent.status.toLowerCase().includes('hold') || latestEvent.status.toLowerCase().includes('exception')));
+            const pointerColor = isHold ? '#d97706' : (offset >= TOTAL_SCHEDULE_MINUTES ? 'var(--success)' : 'var(--fedex-orange)');
+
+            // Render node circles and labels dynamically
+            const nodeElementsHtml = nodes.map((node, i) => {
+                const arrEvent = rawEvents.find(e => e.nodeIndex === i && (e.status.includes('Arrived') || e.status.includes('Picked')));
+                const arrTime = arrEvent ? arrEvent.offsetMinutes : (i === 0 ? 0 : TOTAL_SCHEDULE_MINUTES);
+                const depEvent = rawEvents.find(e => e.nodeIndex === i && e.status.includes('Departed'));
+                const depTime = depEvent ? depEvent.offsetMinutes : arrTime;
+
+                let cls = '';
+                if (offset >= depTime && i < nodes.length - 1) cls = 'passed';
+                else if (offset >= arrTime) cls = 'active';
+
+                let labelAnchor = 'middle';
+                let labelY = node.mapY - 14;
+                if (node.mapY < 50) labelY = node.mapY + 20;
+
+                return `
+                    <circle cx="${node.mapX}" cy="${node.mapY}" r="6" class="map-node ${cls}" />
+                    <text x="${node.mapX}" y="${labelY}" text-anchor="${labelAnchor}" class="map-label ${cls === 'active' ? 'active' : ''}">${node.name}</text>
+                `;
+            }).join('');
+
+            return `
+            <div class="map-card">
+              <div class="map-card-header">
+                <h2>Shipment Route Map</h2>
+                <div class="route-meta-badge" style="${isHold ? 'background: rgba(217, 119, 6, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);' : ''}">${isHold ? 'Status: On Hold at Facility' : `Est. Distance: ${route.distanceMiles} miles (${nodes.length} stops)`}</div>
+              </div>
+              <div class="map-svg-container">
+                <svg viewBox="0 0 400 240" class="map-svg">
+                  <!-- US Map Grid lines -->
+                  <line x1="50" y1="0" x2="50" y2="240" class="map-grid-line" />
+                  <line x1="100" y1="0" x2="100" y2="240" class="map-grid-line" />
+                  <line x1="150" y1="0" x2="150" y2="240" class="map-grid-line" />
+                  <line x1="200" y1="0" x2="200" y2="240" class="map-grid-line" />
+                  <line x1="250" y1="0" x2="250" y2="240" class="map-grid-line" />
+                  <line x1="300" y1="0" x2="300" y2="240" class="map-grid-line" />
+                  <line x1="350" y1="0" x2="350" y2="240" class="map-grid-line" />
+                  
+                  <line x1="0" y1="40" x2="400" y2="40" class="map-grid-line" />
+                  <line x1="0" y1="80" x2="400" y2="80" class="map-grid-line" />
+                  <line x1="0" y1="120" x2="400" y2="120" class="map-grid-line" />
+                  <line x1="0" y1="160" x2="400" y2="160" class="map-grid-line" />
+                  <line x1="0" y1="200" x2="400" y2="200" class="map-grid-line" />
+
+                  <!-- Background Route Path -->
+                  <path d="${fullBgPath}" class="route-path-bg" />
+                  
+                  <!-- Active Route Path -->
+                  <path d="${activePath}" class="route-path-active" style="${isHold ? 'stroke: #d97706; filter: drop-shadow(0 0 4px #d97706);' : ''}" />
+                  
+                  <!-- Route Nodes -->
+                  ${nodeElementsHtml}
+                  
+                  <!-- Animated Package Pointer -->
+                  ${offset >= 0 ? `
+                    <g transform="translate(${pos.x}, ${pos.y})">
+                      <circle cx="0" cy="0" r="12" fill="${pointerColor}" opacity="0.4" class="pulse-ring" />
+                      <circle cx="0" cy="0" r="6" fill="${pointerColor}" stroke="#ffffff" stroke-width="2" style="filter: drop-shadow(0 0 8px ${pointerColor});" />
+                    </g>
+                  ` : ''}
+                </svg>
+              </div>
+            </div>
+            `;
+        }
+
+        function render(data) {
+            errorNote.style.display = 'none';
+            const latestEvent = data.events && data.events.length > 0 ? data.events[0] : null;
+            const isHold = data.exception || (latestEvent && (latestEvent.status.toLowerCase().includes('hold') || latestEvent.status.toLowerCase().includes('exception')));
+            const badge = stageStatusBadge(data.finalStageIdx, data.exception, latestEvent ? latestEvent.status : '');
+            const activeStepIdx = data.exception ? 2 : data.finalStageIdx;
+
+            const stepsHtml = STAGES.map((label, i) => {
+                let cls = '';
+                if (i < activeStepIdx) cls = 'done';
+                else if (i === activeStepIdx) {
+                    if (data.finalStageIdx === 4) cls = 'done';
+                    else if (isHold) cls = 'current hold';
+                    else cls = 'current';
+                }
+                return `<div class="step ${cls}"><div class="step-dot"></div><div class="step-label">${label}</div></div>`;
+            }).join('');
+
+            const fillPct = data.finalStageIdx === 4 ? 100 : (activeStepIdx / (STAGES.length - 1)) * 100;
+
+            const etaLabel = data.finalStageIdx === 4 ? 'Delivered' : 'Expected Delivery';
+            const etaValue = data.finalStageIdx === 4
+                ? fmtTime(data.etaDate)
+                : data.etaDate.toLocaleDateString('en-US', { ...CDT, weekday: 'long', month: 'short', day: 'numeric' });
+
+            const timelineHtml = data.events.map((e, i) => `
+                <div class="t-item ${i === 0 ? (isHold ? 'latest hold' : 'latest') : ''}">
+                  <div class="t-dot" style="${i === 0 && isHold ? 'background: #d97706; box-shadow: 0 0 0 2px #d97706;' : ''}"></div>
+                  <div class="t-time">${fmtTime(e.t)}</div>
+                  <div class="t-status" style="${i === 0 && isHold ? 'color: #d97706;' : ''}">${e.status}</div>
+                  <div class="t-location">${e.detail} — ${e.loc}</div>
+                </div>
+            `).join('');
+
+            const mapHtml = renderMapSvg(data);
+
+            resultArea.innerHTML = `
+                <div class="card">
+                  <div class="status-top">
+                    <div class="status-left">
+                      <div class="tn-label">Tracking Number</div>
+                      <div class="tn-value">${data.tn}</div>
+                      <div style="margin-top:10px;">
+                        <span class="status-badge ${badge.cls}">${badge.label}</span>
+                      </div>
+                    </div>
+                    <div class="eta-block">
+                      <div class="eta-label">${etaLabel}</div>
+                      <div class="eta-value">${etaValue}</div>
+                    </div>
+                  </div>
+
+                  <div class="progress-wrap">
+                    <div class="progress-steps">
+                      <div class="progress-track"></div>
+                      <div class="progress-fill" style="width:${fillPct}%;"></div>
+                      ${stepsHtml}
+                    </div>
+                  </div>
+
+                  <div class="details-grid">
+                    <div class="detail-item">
+                      <div class="d-label">From</div>
+                      <div class="d-value">${data.sender}</div>
+                    </div>
+                    <div class="detail-item">
+                      <div class="d-label">To</div>
+                      <div class="d-value">${data.receiver}</div>
+                    </div>
+                    <div class="detail-item">
+                      <div class="d-label">Contents</div>
+                      <div class="d-value">${data.contents}</div>
+                    </div>
+                    <div class="detail-item">
+                      <div class="d-label">Service</div>
+                      <div class="d-value">${data.service}</div>
+                    </div>
+                    <div class="detail-item">
+                      <div class="d-label">Origin</div>
+                      <div class="d-value">${data.origin[0]}</div>
+                    </div>
+                    <div class="detail-item">
+                      <div class="d-label">Destination</div>
+                      <div class="d-value">${data.dest[0]}</div>
+                    </div>
+                    <div class="detail-item">
+                      <div class="d-label">Est. Distance</div>
+                      <div class="d-value">${data.route.distanceMiles} miles</div>
+                    </div>
+                    <div class="detail-item">
+                      <div class="d-label">Weight</div>
+                      <div class="d-value">${data.weight} lbs</div>
+                    </div>
+                    <div class="detail-item">
+                      <div class="d-label">Signature</div>
+                      <div class="d-value">${data.finalStageIdx === 4 ? 'Obtained' : 'Required'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                ${mapHtml}
+
+                <div class="card">
+                  <h2>Tracking History</h2>
+                  <div class="timeline">
+                    ${timelineHtml}
+                  </div>
+                </div>
+            `;
+        }
+
+        function renderEmpty() {
+            resultArea.innerHTML = `
+                <div class="card">
+                  <div class="empty-state">
+                    <div class="box-icon">📦</div>
+                    <h3>No tracking info yet</h3>
+                    <p>Enter a tracking number above to see its shipment status and delivery history.</p>
+                  </div>
+                </div>
+            `;
+        }
+
+        let currentTracking = null;
+
+        function showLoading() {
+            errorNote.style.display = 'none';
+            resultArea.innerHTML = `
+                <div class="card">
+                  <div class="loading-state">
+                    <div class="fedex-spinner"></div>
+                    <div class="loading-label">Searching for your package<span class="loading-dots"></span></div>
+                    <div class="loading-progress"><div class="loading-progress-fill"></div></div>
+                  </div>
+                </div>
+            `;
+        }
+
+        function handleTrack() {
+            const raw = input.value.trim();
+            const cleaned = raw.replace(/\s+/g, '');
+            if (!/^\d{10,15}$/.test(cleaned)) {
+                errorNote.style.display = 'block';
+                resultArea.innerHTML = '';
+                currentTracking = null;
+                return;
+            }
+            errorNote.style.display = 'none';
+            btn.classList.add('loading');
+            btn.textContent = 'TRACKING...';
+            showLoading();
+
+            const delay = 4000 + Math.random() * 1000;
+
+            setTimeout(() => {
+                const data = buildTrackingData(cleaned);
+                render(data);
+                currentTracking = cleaned;
+                btn.classList.remove('loading');
+                btn.textContent = 'TRACK';
+            }, delay);
+        }
+
+        btn.addEventListener('click', handleTrack);
+        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleTrack(); });
+
+        setInterval(() => {
+            if (currentTracking) {
+                const data = buildTrackingData(currentTracking);
+                render(data);
+            }
+        }, 30000);
+
+        renderEmpty();
+    </script>
+
+</body>
+
+</html>
